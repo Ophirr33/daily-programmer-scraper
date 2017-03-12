@@ -1,0 +1,28 @@
+ Created by http://www.gitignore.io
+
+### Scala ###
+*.class
+*.log
+
+# sbt specific
+.cache/
+.history/
+.lib/
+dist/*
+*/target/
+target/
+lib_managed/
+src_managed/
+project/boot/
+project/plugins/project/
+
+# Scala-IDE specific
+.idea
+*.iml
+*.ipr
+*.iws
+*/out
+out
+
+# Credentials
+src/main/resources/credentials.conf
