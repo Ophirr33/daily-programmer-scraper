@@ -1,0 +1,1 @@
+A scraper for the daily-programmer subreddit that I'm eventually going to use for a website. The goal is to parse all users, posts, and comments on the subreddit. Ideally I'd only parse comments that have actual code submissions on them, but for nowI may just parse all submissions.
