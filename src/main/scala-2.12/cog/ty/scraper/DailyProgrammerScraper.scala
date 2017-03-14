@@ -112,7 +112,11 @@ object Demo extends App {
                               s.getTitle,
                               s.getSelftext,
                               difficulty)
-    for ((c: CommentNode) <- s.getComments.walkTree().asScala) yield {
+    val comments = s.getComments
+    logger.info((comments == null).toString)
+    for {
+      (c: CommentNode) <- if (comments != null) comments.walkTree().asScala else Iterable.empty[CommentNode]
+    } yield {
       val comment = c.getComment
       val user =
         User(redditClient.getUser(comment.getAuthor).getId, comment.getAuthor)
@@ -127,7 +131,7 @@ object Demo extends App {
   }
 
   def permaLinkToUrl(relativePath: String): URL =
-    new URL("reddit.com/" + relativePath)
+    new URL("https://reddit.com/" + relativePath)
 }
 
 case class User(id: String, username: String)
