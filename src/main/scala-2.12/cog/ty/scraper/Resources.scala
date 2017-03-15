@@ -3,13 +3,14 @@ package cog.ty.scraper
 import java.net.URL
 import java.util.Date
 
+import net.dean.jraw.models.Submission
+
 /**
   * The resources we care about from Daily Programming.
   * Designed to be easy to write to a database
   * @author ophirr33
   * @since 3/14/17
   */
-
 case class User(username: String)
 
 case class Challenge(id: String,
@@ -18,6 +19,16 @@ case class Challenge(id: String,
                      title: String,
                      body: String,
                      difficulty: Difficulty)
+
+object Challenge {
+  def apply(s: Submission, difficulty: Difficulty): Challenge =
+    Challenge(s.getId,
+              s.getCreated,
+              new URL("https://reddit.com/" + s.getPermalink),
+              s.getTitle,
+              s.getSelftext,
+              difficulty)
+}
 
 case class Response(id: String,
                     challenge: Challenge,

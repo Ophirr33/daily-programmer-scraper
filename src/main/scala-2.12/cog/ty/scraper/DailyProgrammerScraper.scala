@@ -10,6 +10,7 @@ import net.dean.jraw.http.{NetworkException, UserAgent}
 import net.dean.jraw.models.{CommentNode, Listing, Submission}
 import net.dean.jraw.paginators.{Sorting, SubredditPaginator, TimePeriod}
 
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 import scala.util.{Failure, Success, Try}
@@ -30,8 +31,8 @@ case class DailyProgrammerScraper(redditClient: RedditClient, logger: Logger) {
 
     import collection.JavaConverters._
 
-    val users = ArrayBuffer[User]()
-    val challenges = ArrayBuffer[Challenge]()
+    val users = mutable.HashSet[User]()
+    val challenges = mutable.HashSet[Challenge]()
     val responses = ArrayBuffer[Response]()
 
     while (dailyProgrammer.hasNext) {
@@ -48,10 +49,12 @@ case class DailyProgrammerScraper(redditClient: RedditClient, logger: Logger) {
               case Success(submissionWithComments) =>
                 logger.debug(
                   s"Successfully loaded submission with id `${s.getId}`")
-                parseSubmission(submissionWithComments, Difficulty(difficulty)).foreach {
-                  case (challenge, user, response) =>
-                    challenges.append(challenge)
-                    users.append(user)
+                val d = Difficulty(difficulty)
+                val challenge = Challenge(submissionWithComments, d)
+                challenges.add(challenge)
+                parseSubmission(submissionWithComments, d).foreach {
+                  case (user, response) =>
+                    users.add(user)
                     responses.append(response)
                     logger.debug(
                       "Successfully parsed a response with challenge id"
@@ -69,24 +72,18 @@ case class DailyProgrammerScraper(redditClient: RedditClient, logger: Logger) {
         }
       }
     }
-    (challenges, users, responses)
+    (challenges.toSeq, users.toSeq, responses)
   }
 
-  def parseSubmission(
-      s: Submission,
-      difficulty: Difficulty): Iterable[(Challenge, User, Response)] = {
-    val challenge = Challenge(s.getId,
-                              s.getCreated,
-                              permaLinkToUrl(s.getPermalink),
-                              s.getTitle,
-                              s.getSelftext,
-                              difficulty)
+  def parseSubmission(s: Submission,
+                      difficulty: Difficulty): Iterable[(User, Response)] = {
     val comments = s.getComments
     import collection.JavaConverters._
     for {
       (c: CommentNode) <- if (comments != null) comments.walkTree().asScala
       else {
-        logger.warn(s"Received null instead of comments for submission `${s.getId}`")
+        logger.warn(
+          s"Received null instead of comments for submission `${s.getId}`")
         Iterable.empty[CommentNode]
       }
     } yield {
@@ -94,17 +91,15 @@ case class DailyProgrammerScraper(redditClient: RedditClient, logger: Logger) {
       val user =
         User(comment.getAuthor)
       val response = Response(comment.getId,
-                              challenge,
+                              Challenge(s, difficulty),
                               user,
                               comment.getCreated,
                               Option(comment.getUrl).map(new URL(_)),
                               comment.getBody)
-      (challenge, user, response)
+      (user, response)
     }
   }
 
-  def permaLinkToUrl(relativePath: String): URL =
-    new URL("https://reddit.com/" + relativePath)
 }
 
 object DailyProgrammerScraper {
@@ -116,7 +111,7 @@ object DailyProgrammerScraper {
     *        username password clientId clientSecret   * @param configFile
     * @return
     */
-   def apply(credentialsFileName: String,
+  def apply(credentialsFileName: String,
             version: String,
             user: String): DailyProgrammerScraper = {
     val logger = Logger[DailyProgrammerScraper]
