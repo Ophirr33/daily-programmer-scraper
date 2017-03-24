@@ -1,10 +1,10 @@
 import cog.ty.scraper.{Challenge, Response, User}
-import slick.jdbc.JdbcProfile
+import slick.driver.H2Driver.api._
 import slick.lifted.{ProvenShape, Tag}
-import slick.model.Table
+// import slick.model.Table
 
-class Tables(driver: JdbcProfile) {
-  import driver.api._
+class Tables(/*driver: JdbcProfile*/) {
+  // import driver.api._
 
   class Users(tag: Tag) extends Table[User](tag, "USERS") {
     def username = column[String]("USERNAME", O.PrimaryKey)
@@ -18,5 +18,5 @@ class Tables(driver: JdbcProfile) {
   class Responses(tag: Tag) extends Table[Response](tag, "RESPONSES") {
     override def * : ProvenShape[Response] = ???
   }
-
+ 
 }
