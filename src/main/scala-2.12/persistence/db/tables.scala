@@ -1,7 +1,6 @@
-import cog.ty.scraper.{Challenge, Response, User}
-import slick.driver.H2Driver.api._
+import cog.ty.scraper.{Challenge, Difficulty, Response, User}
 import slick.lifted.{ProvenShape, Tag}
-import slick.model.Table
+import slick.jdbc.JdbcProfile
 import java.util.Date
 import java.net.URL
 
@@ -22,35 +21,31 @@ class DAO(driver: JdbcProfile) {
     def body = column[String]("BODY")
     def difficulty = column[String]("DIFFICULTY")
     override def * : ProvenShape[Challenge] = (id, created, link, title, body, difficulty) <> (
-      (row: (String, Date, Option[String], String, String, String)) =>
+      (row: (String, Date, String, String, String, String)) =>
           Challenge(row._1, row._2, new URL(row._3), row._4, row._5, Difficulty(row._6)),
       (ch: Challenge) =>
           Some(ch.id, ch.created, ch.link.toString, ch.title, ch.body, ch.difficulty.difficulty))
   }
   val challenges = TableQuery[Challenges]
 
-  class Responses(tag: Tag) extends Table[Response](tag, "RESPONSES") {
+  class Responses(tag: Tag) extends Table[(String, String, String, Date, Option[String], String)](tag, "RESPONSES") {
     def id = column[String]("ID", O.PrimaryKey)
     def challengeID = column[String]("CHALLENGE_ID")
-    def username = column[STRING]("USERNAME")
+    def username = column[String]("USERNAME")
     def created = column[Date]("CREATED")
-    def link = column[Option[URL]]("LINK")
+    def link = column[Option[String]]("LINK")
     def body = column[String]("BODY")
     def challenge = foreignKey("CHALLENGE_ID", challengeID, challenges)(_.id, onUpdate=ForeignKeyAction.Restrict, onDelete=ForeignKeyAction.Cascade)
     def user = foreignKey("USERNAME", username, users)(_.username, onUpdate=ForeignKeyAction.Restrict, onDelete=ForeignKeyAction.Cascade)
-    override def * : ProvenShape[Response] = (id, challengeID, username, created, link, body)
+    override def * : (Rep[String], Rep[String], Rep[String], Rep[Date], Rep[Option[String]], Rep[String]) =
+      (id, challengeID, username, created, link, body)
   }
-<<<<<<< HEAD
 
   object responses extends TableQuery(new Responses(_)) {
-    def insertRow(id: Rep[String], chId: Rep[String], uname: Rep[String], created: Rep[Date], link: Rep[Option[String]], body: Rep[String]) = {
-      this += (id, chId, uname, created, link, body)
+    def insertRow(id: String, chId: String, uname: String, created: Date, link: Option[String], body: String) = {
+      this += ((id, chId, uname, created, link, body))
     }
     val insertCompiled = Compiled(insertRow _)
-
-   def insertResponse(r: Response) = insertCompiled(r.id, r.challenge.id, r.user.username, r.created, r.link.map(_.toString), r.difficulty.difficulty)
+//    def insertResponse(r: Response) = insertCompiled(r.id, r.challenge.id, r.user.username, r.created, r.link.map(_.toString), r.body)
   }
-=======
- 
->>>>>>> 3377649b4468c46fe907465d5f10cf93d6ff47dc
 }
