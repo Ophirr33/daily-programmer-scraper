@@ -1,5 +1,5 @@
 import cog.ty.scraper.{Challenge, Response, User}
-import slick.jdbc.JdbcProfile
+import slick.driver.H2Driver.api._
 import slick.lifted.{ProvenShape, Tag}
 import slick.model.Table
 import java.util.Date
@@ -40,6 +40,7 @@ class DAO(driver: JdbcProfile) {
     def user = foreignKey("USERNAME", username, users)(_.username, onUpdate=ForeignKeyAction.Restrict, onDelete=ForeignKeyAction.Cascade)
     override def * : ProvenShape[Response] = (id, challengeID, username, created, link, body)
   }
+<<<<<<< HEAD
 
   object responses extends TableQuery(new Responses(_)) {
     def insertRow(id: Rep[String], chId: Rep[String], uname: Rep[String], created: Rep[Date], link: Rep[Option[String]], body: Rep[String]) = {
@@ -49,4 +50,7 @@ class DAO(driver: JdbcProfile) {
 
    def insertResponse(r: Response) = insertCompiled(r.id, r.challenge.id, r.user.username, r.created, r.link.map(_.toString), r.difficulty.difficulty)
   }
+=======
+ 
+>>>>>>> 3377649b4468c46fe907465d5f10cf93d6ff47dc
 }
