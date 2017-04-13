@@ -37,7 +37,14 @@ case class Response(id: String,
                     link: Option[URL],
                     body: String)
 
-sealed trait Difficulty
+sealed trait Difficulty {
+  val difficulty: String = this match {
+    case Easy => "easy"
+    case Intermediate => "intermediate"
+    case Hard => "hard"
+    case Other(tag) => tag
+  }
+}
 
 case object Easy extends Difficulty
 
